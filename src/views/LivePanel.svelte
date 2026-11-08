@@ -9,13 +9,14 @@
   chart and the chart's own leading edge are the same reading.
 -->
 <script lang="ts">
-  import { untrack } from 'svelte'
+  import { untrack, type Component } from 'svelte'
   import ControlFeedback from '$lib/ui/ControlFeedback.svelte'
   import LiveChart from '$lib/ui/LiveChart.svelte'
   import { portal } from '$lib/ui/portal'
   import { formatPower } from '$lib/format/power'
   import { FID } from '$lib/format/explanation'
   import { planetColor, type FlowColorRole } from '$lib/state/flow'
+  import { controlRows } from '$vendor/ftw/control-feedback.js'
   import type { SiteStore } from '$lib/state/site.svelte'
 
   /** Which bubble was tapped. Everything else follows from it. */
@@ -109,6 +110,17 @@
     site.recentField(spec.fid).map((s) => ({ t: s.t, v: spec.signed ? s.v : Math.abs(s.v) }))
   )
 
+  // Beside the control feedback only, and fetched when it is, so the callBox
+  // path stays out of the launch chunk.
+  const hasFeedback = $derived(controlRows(feedback).length > 0)
+  let Journal = $state<Component<{ site: SiteStore }> | null>(null)
+  $effect(() => {
+    if (!hasFeedback || Journal) return
+    void import('$lib/ui/ControlJournal.svelte').then((m) => {
+      Journal = m.default
+    })
+  })
+
   let sheetEl = $state<HTMLElement | null>(null)
   $effect(() => {
     sheetEl?.focus({ preventScroll: true })
@@ -157,6 +169,7 @@
       </div>
       <p class="axis">last two minutes</p>
     {/if}
+    {#if hasFeedback && Journal}<Journal {site} />{/if}
   </div>
 </div>
 

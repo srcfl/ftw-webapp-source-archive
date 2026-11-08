@@ -46,6 +46,15 @@ export interface ControlFeedback {
   requested_a?: number | null
   offered_a?: number | null
   device_limit_a?: number | null
+  /** The current the charger signals to the car now. */
+  pilot_a?: number | null
+  dynamic_limit_a?: number | null
+  /** The current the charger lets the car take, when its driver reports it. */
+  limit_a?: number | null
+  limited_by?: string
+  make?: string
+  charging_phase?: string
+  charging_phase_max_w?: number | null
   device_reason?: string
   since_ms?: number
   command_at_ms?: number

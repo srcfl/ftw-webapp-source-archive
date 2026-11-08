@@ -67,3 +67,46 @@ it('shows numbers and the response curve for experts, and drops them when stale'
   expect(screen.queryByRole('img')).toBeNull()
   expect(screen.queryByText('10 W more drawn')).toBeNull()
 })
+
+/** Every reason setControlStatus and classifyControlFeedback in Core can leave on a row. */
+const CORE_REASONS = [
+  'power_observed', 'solar_below_ceiling', 'idle', 'plan', 'manual_hold', 'pv_surplus', 'vehicle_complete', 'vehicle_limit_completion',
+  'vehicle_not_requesting', 'vehicle_declined', 'waiting_response', 'no_command', 'not_connected', 'no_plan_budget', 'pv_surplus_pause', 'wake_kick',
+  'battery_full', 'battery_nearly_full', 'battery_nearly_empty', 'core_limit', 'fuse_limit', 'fuse_cooldown', 'import_limit', 'charger_limit',
+  'load_balancer_limit', 'charger_pilot_limit', 'one_phase', 'device_limit', 'offered_current_lower', 'setpoint_changed', 'power_below_target',
+  'power_above_target', 'power_wrong_direction', 'no_power_response', 'power_while_idle', 'device_fault', 'telemetry_stale', 'command_failed',
+  'command_unconfirmed', 'response_unknown', 'readings_lost', 'default_failed', 'observe_only', 'disabled', 'device_control', 'site_meter_stale',
+  'site_phase_currents_stale',
+]
+
+it.each(CORE_REASONS)('has words for %s', (reason) => {
+  render(ControlFeedback, { value: [row({ kind: 'ev', reason, status: 'limited' })] })
+  expect(document.body.textContent).not.toMatch(/cannot describe/)
+})
+
+it('names the load balancer only when Core reports it, and asks nothing of the car', () => {
+  render(ControlFeedback, { value: [row({ kind: 'ev', driver: 'easee', status: 'limited', reason: 'load_balancer_limit', make: 'Easee', limit_a: 7, requested_a: 16, actual_w: 4800 })] })
+  expect(screen.getByRole('heading', { name: /Limited by the charger’s load balancing/ })).toBeTruthy()
+  expect(screen.getByText('Easee limits the charger to 7 A (its load balancing). FTW asked for 16 A; the car takes 4.8 kW.')).toBeTruthy()
+})
+
+it('says what the pilot shows and that the cause is unknown', () => {
+  render(ControlFeedback, { value: [row({ kind: 'ev', driver: 'easee', status: 'limited', reason: 'charger_pilot_limit', pilot_a: 10, dynamic_limit_a: 16, requested_a: 16, actual_w: 6900 })] })
+  expect(screen.getByRole('heading', { name: /Limited by the charger/ })).toBeTruthy()
+  expect(screen.getByText('The charger signals 10 A to the car. FTW asked for 16 A; measured charging is 6.9 kW. The internal limiting cause is unknown.')).toBeTruthy()
+  expect(screen.getByText('Actual pilot current')).toBeTruthy()
+  expect(screen.getByText('Dynamic current setting')).toBeTruthy()
+})
+
+it('does not claim the car is full when it only stopped charging', () => {
+  render(ControlFeedback, { value: [row({ kind: 'ev', status: 'waiting', reason: 'vehicle_declined', actual_w: 0 })] })
+  expect(screen.getByRole('heading', { name: /Car stopped charging/ })).toBeTruthy()
+  expect(screen.getByText(/does not confirm its battery level or charge limit/)).toBeTruthy()
+  expect(document.body.textContent).not.toMatch(/is full/)
+})
+
+it('keeps a car that takes no power as following', () => {
+  render(ControlFeedback, { value: [row({ kind: 'ev', status: 'following', reason: 'vehicle_not_requesting', actual_w: 0 })] })
+  expect(screen.getByRole('heading', { name: /Car not taking power/ })).toBeTruthy()
+  expect(document.querySelector('.block')!.getAttribute('data-tone')).toBe('ok')
+})
