@@ -1,4 +1,4 @@
-// Vendored from srcfl/ftw web/control-feedback.js at ed341192.
+// Vendored from srcfl/ftw web/control-feedback.js at 1206ee46627ea6dda2b0b83ec37641d6c52ef712.
 // Do not edit here; change the box source, then copy it here.
 //
 // Words for Core's answer to "Are we in control?". Core owns every verdict:
