@@ -33,7 +33,9 @@ export function watchJournal(site: SiteStore, onView: (view: JournalView) => voi
 
   const tick = async () => {
     let wait = RETRY_MS
-    if (site.session.phase === 'streaming' && site.session.caps.has(CAP_API_PASSTHROUGH)) {
+    if (document.hidden) {
+      // Nobody is looking: ask again once somebody is.
+    } else if (site.session.phase === 'streaming' && site.session.caps.has(CAP_API_PASSTHROUGH)) {
       try {
         const wire = await callBox<unknown>(site, { method: 'GET', path: '/api/control/journal', query: JOURNAL_QUERY })
         if (stopped) return

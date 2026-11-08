@@ -32,6 +32,17 @@ describe('happened', () => {
     expect(list[4]!.when).toMatch(/ · 3 s$/)
   })
 
+  it('keeps a device line that a short block only touches', () => {
+    const device = span({ id: 1, status: 'not_controlled', reason: 'site_meter_stale', start_ms: at(6, 14), end_ms: at(6, 29) })
+    const block = (start: number, end: number) => span({ id: 2, subject: 'site:dispatch', driver: '', kind: 'dispatch', status: 'blocked', reason: 'site_meter_stale', start_ms: start, end_ms: end })
+    expect(words([device, block(at(6, 20), at(6, 20, 3))])).toHaveLength(2)
+    expect(words([device, block(at(6, 14, 8), at(6, 28, 55))])).toHaveLength(1)
+    const quiet = (start: number, end: number) => span({ id: 3, subject: 'source:lynx', kind: 'source', status: 'offline', reason: 'telemetry_stale', start_ms: start, end_ms: end })
+    const stale = span({ id: 1, status: 'not_controlled', reason: 'telemetry_stale' })
+    expect(words([stale, quiet(at(6, 20), at(6, 21))])).toHaveLength(2)
+    expect(words([stale, quiet(at(6, 13), at(6, 30))])).toHaveLength(1)
+  })
+
   it('gives a time range, and "Since" for what still holds', () => {
     expect(words([span({ requested_w: pw(3000), actual_w: pw(0) })])[0]!.when).toBe(`${hm(at(6, 14))}–${hm(at(6, 29))}`)
     const open = words([span({ end_ms: null })])[0]!

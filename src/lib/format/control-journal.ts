@@ -128,12 +128,14 @@ export function journalAnswer(wire: unknown): JournalAnswer {
 }
 
 const needsLook = (span: JournalSpan) => span.severity === 'warning' || span.severity === 'alarm'
-const overlaps = (a: JournalSpan, b: JournalSpan, nowMs: number) => a.startMs <= (b.endMs ?? nowMs) && b.startMs <= (a.endMs ?? nowMs)
 
 /** Reasons a device row shares with the site's dispatch block. */
 const DISPATCH_REASONS = new Set(['site_meter_stale', 'site_phase_currents_stale'])
 /** How close two stretches of one verdict must lie to read as one. */
 const JOIN_MS = 5_000
+/** Whether `a` held for all of `b`, give or take the time between two samples. */
+const covers = (a: JournalSpan, b: JournalSpan, nowMs: number) =>
+  a.startMs <= b.startMs + 2 * JOIN_MS && (a.endMs ?? nowMs) >= (b.endMs ?? nowMs) - 2 * JOIN_MS
 
 /**
  * The journal's warnings and alarms in words, with the notices the box sent
@@ -150,8 +152,8 @@ export function happened(answer: JournalAnswer, sources: ReadonlyMap<string, { k
   const quiet = looked.filter((s) => s.kind === 'source')
   const kept = looked.filter((span) => {
     if (['dispatch', 'source', 'slot'].includes(span.kind)) return true
-    if (DISPATCH_REASONS.has(span.reason) && blocks.some((b) => b.reason === span.reason && overlaps(b, span, nowMs))) return false
-    return !(span.reason === 'telemetry_stale' && quiet.some((q) => q.driver === span.driver && overlaps(q, span, nowMs)))
+    if (DISPATCH_REASONS.has(span.reason) && blocks.some((b) => b.reason === span.reason && covers(b, span, nowMs))) return false
+    return !(span.reason === 'telemetry_stale' && quiet.some((q) => q.driver === span.driver && covers(q, span, nowMs)))
   })
   const entries = joined(kept).map((span) => spanEntry(span, sources, nowMs))
   for (const notice of answer.notices) {
