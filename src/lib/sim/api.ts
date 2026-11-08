@@ -1204,6 +1204,7 @@ function controlFeedback(driver: string, kind: string, watts: number, now: numbe
     driver, kind, mode: 'planner_arbitrage', status: 'following', reason: 'power_observed', severity: 'info', evidence: 'measured',
     readings_fresh: true, requested_w: watts, sent_w: watts, readback_w: watts, actual_w: watts,
     command_at_ms: now - 4_000, observed_at_ms: now - 1_000, site_confirmation: 'device_response_unconfirmed',
+    ...(kind === 'battery' ? { on_plan: true } : {}),
   }
 }
 

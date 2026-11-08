@@ -17,7 +17,7 @@ test('opens the device panel with the answer first and keeps an open receipt thr
     const status={grid_w:1000,load_w:500,drivers:{sungrow:{status:'ok',bat_w:1000}},control_feedback:[
       lost
         ? {driver:'sungrow',kind:'battery',mode:'planner_arbitrage',status:'no_contact',reason:'readings_lost',severity:'alarm',evidence:'accepted',readings_fresh:false,actual_w:null}
-        : {driver:'sungrow',kind:'battery',mode:'planner_arbitrage',status:'following',reason:'power_observed',severity:'info',evidence:'confirmed',readings_fresh:true,actual_w:1000,confirmed_at_ms:Date.now()},
+        : {driver:'sungrow',kind:'battery',mode:'planner_arbitrage',on_plan:true,status:'following',reason:'power_observed',severity:'info',evidence:'confirmed',readings_fresh:true,actual_w:1000,confirmed_at_ms:Date.now()},
       {driver:'easee',kind:'ev',status:'no_contact',reason:'readings_lost',severity:'alarm',evidence:'accepted',readings_fresh:false,actual_w:null},
     ]}
     return Promise.resolve({status:200,headers:{},body:new TextEncoder().encode(JSON.stringify(status))})

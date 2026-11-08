@@ -10,6 +10,7 @@
 
 import type { Plan, PlanSlot, PlanReason, SiteMode, ModeInfo } from '$lib/protocol/messages'
 import { toDisplay, unitFor } from '$vendor/ftw/price-units.js'
+import { planNowWords } from '$vendor/ftw/control-feedback.js'
 import { formatPower } from './power'
 
 /**
@@ -79,7 +80,7 @@ export interface PlanHeadline {
  * cannot see is what is about to happen, and that is the reason to look at a
  * plan at all.
  */
-export function planHeadline(plan: Plan | null, nowMs: number): PlanHeadline {
+export function planHeadline(plan: Plan | null, nowMs: number, planNow?: unknown): PlanHeadline {
   if (!plan) return { text: 'No plan yet.', slotIndex: null }
 
   if (plan.stale) {
@@ -93,6 +94,15 @@ export function planHeadline(plan: Plan | null, nowMs: number): PlanHeadline {
     (s) => nowMs >= s.startMs && nowMs < s.startMs + s.durationMs
   )
   if (current === -1) return { text: 'No plan for right now.', slotIndex: null }
+
+  // The box says the batteries are not doing what this quarter planned. The
+  // plan's own sentence would read "The battery is charging" over a battery
+  // that is not.
+  const off = planNowWords(planNow)
+  if (off) {
+    const words = [`${off.now}.`, `${off.plan}.`, off.why, off.then].filter(Boolean).join(' ')
+    return { text: words, slotIndex: current }
+  }
 
   const now = plan.slots[current]!
   const nowAction = slotAction(now)
@@ -140,7 +150,7 @@ export interface PlanBrief {
 export function planBrief(
   plan: Plan | null,
   nowMs: number,
-  opts: { mode?: string | null; dispatchBlockedBy?: readonly string[] } = {}
+  opts: { mode?: string | null; dispatchBlockedBy?: readonly string[]; planNow?: unknown } = {}
 ): PlanBrief {
   const mode = opts.mode ?? null
   const blocked = opts.dispatchBlockedBy ?? []
@@ -176,6 +186,18 @@ export function planBrief(
       time: null,
       reason: null,
       constraint: constraintLine(plan, blocked, null),
+    }
+  }
+
+  const off = planNowWords(opts.planNow)
+  if (off) {
+    return {
+      state: { label: 'Not as planned', tone: 'idle' },
+      action: `Now: ${off.now.charAt(0).toLowerCase()}${off.now.slice(1)}`,
+      time: off.plan,
+      // The card adds its own full stop.
+      reason: [off.why, off.then].filter(Boolean).join(' ').replace(/\.$/, ''),
+      constraint: constraintLine(plan, blocked, plan.slots[current]!),
     }
   }
 

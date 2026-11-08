@@ -26,6 +26,9 @@
     type BatteryExport,
   } from '$lib/format/plan-prefs'
   import { formatPower } from '$lib/format/power'
+  import { CAP_API_PASSTHROUGH } from '$lib/protocol/contract'
+
+  const PLAN_NOW_EVERY_MS = 10_000
 
   interface Props {
     site: SiteStore
@@ -77,7 +80,32 @@
 
   onDestroy(() => plan.destroy())
 
-  const headline = $derived(planHeadline(plan.plan, nowMs))
+  // Whether the batteries do what this quarter planned, and why not. The plan
+  // alone cannot say, so this screen asks the box too, gently.
+  let planNow = $state<unknown>(null)
+  const askPlanNow = $derived(site.documentVisible &&
+    site.session.phase === 'streaming' && site.session.caps.has(CAP_API_PASSTHROUGH))
+  $effect(() => {
+    if (!askPlanNow) {
+      planNow = null
+      return
+    }
+    const s = untrack(() => site)
+    let stop: (() => void) | undefined
+    let cancelled = false
+    void import('$lib/state/now-status').then((m) => {
+      if (cancelled) return
+      stop = m.watchStatus(s, (next) => {
+        planNow = next.fresh ? next.status?.plan_now ?? null : null
+      }, PLAN_NOW_EVERY_MS)
+    })
+    return () => {
+      cancelled = true
+      stop?.()
+    }
+  })
+
+  const headline = $derived(planHeadline(plan.plan, nowMs, planNow))
 
   /** The next twelve hours. Beyond that a plan is a guess about a guess. */
   const slots = $derived(

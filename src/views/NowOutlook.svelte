@@ -62,6 +62,7 @@
     planBrief(plan.plan, nowMs, {
       mode: plan.actualMode,
       dispatchBlockedBy: site.session.dispatchBlockedBy,
+      planNow: statusFresh ? status?.plan_now : null,
     })
   )
 

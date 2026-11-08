@@ -5,7 +5,7 @@ import ControlFeedback from './ControlFeedback.svelte'
 afterEach(cleanup)
 
 const row = (extra: Record<string, unknown> = {}) => ({
-  driver: 'Sungrow', kind: 'battery', mode: 'planner_arbitrage', status: 'following', reason: 'power_observed',
+  driver: 'Sungrow', kind: 'battery', mode: 'planner_arbitrage', on_plan: true, status: 'following', reason: 'power_observed',
   severity: 'info', evidence: 'measured', readings_fresh: true, sent_w: -2250, actual_w: -2249, readback_w: -2250,
   command_at_ms: 1, observed_at_ms: 2, site_confirmation: 'device_response_unconfirmed', ...extra,
 })
