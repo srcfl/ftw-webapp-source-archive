@@ -3,7 +3,7 @@ import type { AppEnv } from './types.ts'
 
 // FTW Cloud's own group size for a public day. 5 since 23 October 2026;
 // 10 before, kept while an older Cloud may still answer.
-const PUBLIC_FLEET_MINIMUMS = [5, 10]
+const PUBLIC_FLEET_MINIMUMS = [1, 5, 10]
 const dimensions = ['ftw_versions', 'channels', 'drivers', 'battery_kwh', 'price_zones', 'install_age'] as const
 export interface PublicFleetDay { date: string; reports: number | null }
 export interface PublicFleetFeed { schema: 'ftw.fleet-public/1'; minimum: number; meaning: string; observed_at: string; days: PublicFleetDay[] }

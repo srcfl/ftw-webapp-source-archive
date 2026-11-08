@@ -790,6 +790,7 @@ describe('installation estimates',()=>{
   expect(()=>parseFleet(v,now)).toThrow('small fleet label')
   v.days[0]!.drivers={};v.days[0]!.reports=4
   expect(()=>parseFleet(v,now)).toThrow('small fleet count')
+  expect(parseFleet({...fleetView(now),minimum:1},now).minimum).toBe(1)
   expect(()=>parseFleet({...fleetView(now),minimum:3},now)).toThrow('invalid public fleet')
  })
  it('collects the safe Cloud feed independently of hourly energy approval',async()=>{
@@ -909,3 +910,14 @@ describe('Cloud collector redirects in the Workers runtime', () => {
     }
   )
 })
+
+it('counts every report when the minimum is one', () => {
+  const now = Date.UTC(2026, 10, 8, 12)
+  const date = new Date(now - 86_400_000).toISOString().slice(0, 10)
+  const empty = { ftw_versions: {}, channels: {}, drivers: { 'sma_pv@1.1.1': 1 }, battery_kwh: { '12': 1 }, price_zones: { SE3: 1 }, install_age: {} }
+  const view = publicFleet([{ date, reports: 1, ...empty } as never], 1, now) as { state: string; reports_30d: number; dimensions: { drivers: unknown } }
+  expect(view.state).not.toBe('withheld')
+  expect(view.reports_30d).toBe(1)
+  expect(JSON.stringify(view.dimensions.drivers)).toContain('sma_pv@1.1.1')
+})
+

@@ -19,6 +19,8 @@ export default defineConfig({
           RELAY_INGEST_SECRET: '0123456789abcdef0123456789abcdef',
           ACCESS_TEAM_DOMAIN: 'https://test.cloudflareaccess.com',
           ACCESS_AUD: 'test-audience',
+          // The floor's own logic stays under test; production's is 1.
+          PUBLIC_MIN_REPORTS: '5',
           TEST_MIGRATIONS: migrations,
         },
       },

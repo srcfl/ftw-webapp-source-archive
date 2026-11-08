@@ -458,7 +458,9 @@ ${privateView ? opsSection : ''}    <section id="private-grid" class="two-col" h
       setText('fleet-total', number(view.reports_30d) + ' / 30d');
       note.textContent = privateMode
         ? 'Private aggregate view. Reports are daily check-ins, not users or unique boxes.'
-        : 'Public totals use a minimum group size of ' + view.minimum + '. A version or integration appears only when its own count reaches the same limit.';
+        : view.minimum === 1
+          ? 'Every daily report counts. A report is not a user or a unique box.'
+          : 'Public totals use a minimum group size of ' + view.minimum + '. A version or integration appears only when its own count reaches the same limit.';
     }
     if (!privateMode && view.state === 'withheld') {
       const chart = $('fleet-chart');

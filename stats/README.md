@@ -23,7 +23,7 @@ show smaller aggregate counts, but it requires a valid Cloudflare Access JWT.
 
 The separate relay is retired. Earlier reports remain as an archive and do
 not measure current Cloud use. Core's anonymous daily reports now go to
-Cloud; the Worker reads its thresholded public view at `/v1/fleet/public`. They still cannot count unique installations.
+Cloud; the Worker reads its public view at `/v1/fleet/public`, where every report counts. They still cannot count unique installations.
 
 The installation estimate divides reports from the last seven complete UTC
 days by seven, then rounds to a whole installation. Core normally reports
