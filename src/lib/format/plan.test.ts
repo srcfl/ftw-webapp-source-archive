@@ -253,3 +253,35 @@ describe('formatPrice', () => {
     expect(formatPrice(NaN, 'SEK')).toBeNull()
   })
 })
+
+describe('the plan beside what happens now', () => {
+  const offPlan = {
+    status: 'off_plan', why: 'less_solar', battery_w: -1231, planned_battery_w: 2595,
+    pv_w: -1392, planned_pv_w: -3814, load_w: 1230, planned_load_w: 1219, ev_w: 0, planned_ev_w: 0,
+  }
+
+  it('says what the battery does and why, not the plan\'s sentence', () => {
+    const h = planHeadline(plan([slot(0, 2595)]), T0, offPlan)
+    expect(h.text).toBe('Discharging 1.2 kW. The plan said: charge 2.6 kW. The sun gives 1.4 kW; the forecast said 3.8 kW. The battery covers the home, so you buy less.')
+    expect(h.slotIndex).toBe(0)
+  })
+
+  it('keeps the plan\'s words while it holds, and on an old box', () => {
+    const on = planHeadline(plan([slot(0, 2595)]), T0, { ...offPlan, status: 'as_planned' })
+    expect(on.text).toMatch(/^The battery is charging/)
+    expect(planHeadline(plan([slot(0, 2595)]), T0, null).text).toBe(on.text)
+  })
+
+  it('gives the box card the same lines', () => {
+    const b = planBrief(plan([slot(0, 2595)]), T0, { mode: 'planner_arbitrage', planNow: offPlan })
+    expect(b.state).toEqual({ label: 'Not as planned', tone: 'idle' })
+    expect(b.action).toBe('Now: discharging 1.2 kW')
+    expect(b.time).toBe('The plan said: charge 2.6 kW')
+    expect(b.reason).toBe('The sun gives 1.4 kW; the forecast said 3.8 kW. The battery covers the home, so you buy less')
+  })
+
+  it('does not hide a stale plan behind the comparison', () => {
+    const b = planBrief(plan([slot(0, 2595)], { stale: true }), T0, { mode: 'planner_arbitrage', planNow: offPlan })
+    expect(b.state.label).toBe('Fallback active')
+  })
+})

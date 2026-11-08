@@ -73,5 +73,6 @@ export function controlReceipt(row: ControlFeedback, live?: boolean): { step: st
 export function controlNumbers(row: ControlFeedback, live?: boolean): [string, string][]
 export function controlCurve(row: ControlFeedback, live?: boolean): { device: string; site: string; label: string; scale: string; duration: string } | null
 export function controlForPlanet(value: unknown, planet?: ControlScope): ControlFeedback[]
+export function planNowWords(value: unknown): { now: string; plan: string; why: string; then: string } | null
 export function controlSummary(value: unknown, live?: boolean): { title: string; tone: ControlTone }
 export function withControlMarks<T>(planets: T[], value: unknown, live?: boolean): (T & { controlMark?: ControlMark; placeholder?: boolean; clickable?: boolean })[]

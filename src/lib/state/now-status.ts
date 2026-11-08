@@ -32,7 +32,7 @@ function asStatus(wire: unknown): SiteStatus | null {
  * Poll /api/status while the session is live. Calls `onStatus` with each
  * snapshot that looks like one. Returns a stop function.
  */
-export function watchStatus(site: SiteStore, onStatus: (snapshot: StatusSnapshot) => void): () => void {
+export function watchStatus(site: SiteStore, onStatus: (snapshot: StatusSnapshot) => void, periodMs = PERIOD_MS): () => void {
   let stopped = false
   let timer: ReturnType<typeof setTimeout> | undefined
   let expiry: ReturnType<typeof setTimeout> | undefined
@@ -70,7 +70,7 @@ export function watchStatus(site: SiteStore, onStatus: (snapshot: StatusSnapshot
       }
     } else expire()
     if (stopped) return
-    timer = setTimeout(() => void tick(), PERIOD_MS)
+    timer = setTimeout(() => void tick(), periodMs)
   }
 
   void tick()

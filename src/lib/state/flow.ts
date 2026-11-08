@@ -78,6 +78,7 @@ export interface StatusEnergyToday {
 
 export interface SiteStatus {
   control_feedback?: unknown
+  plan_now?: unknown
   grid_w?: unknown
   pv_w?: unknown
   bat_w?: unknown
