@@ -11,6 +11,7 @@
 -->
 <script lang="ts">
   import ControlFeedback from "$lib/ui/ControlFeedback.svelte"
+  import ControlJournal from "$lib/ui/ControlJournal.svelte"
   import { untrack, onDestroy } from 'svelte'
   import { LoadpointsStore, type Control, type Outcome } from '$lib/state/loadpoints.svelte'
   import { askWhenLive } from '$lib/state/ask.svelte'
@@ -855,6 +856,7 @@
         <p class="note">This charger is no longer listed. Close this view and choose a charger on the home screen.</p>
       {/if}
     {/each}
+    {#if store.points.some((lp) => lp.controlFeedback)}<ControlJournal {site} />{/if}
   {/if}
   {/if}
 </div>

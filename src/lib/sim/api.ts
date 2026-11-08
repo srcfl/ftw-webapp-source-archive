@@ -28,6 +28,7 @@
  */
 
 import { DAY_ANCHOR_PERMILLE, sample, stepSoc, type HouseConfig, type Reading } from './energy'
+import { simulatedJournal } from './journal'
 import { OP_PLANNER_PREFS_SET, OP_SET_MODE, ROLE_OWNER, ROLE_VIEWER, type Role } from '$lib/protocol/messages'
 import { roleHasScope } from '$lib/protocol/contract'
 import { wireBytes } from '$lib/protocol/frame'
@@ -108,6 +109,7 @@ export interface RouteFacts {
 const ROUTES: Record<string, RouteFacts> = {
   // Reads the app makes, and one it never will.
   'GET /api/status': { tier: 'read' },
+  'GET /api/control/journal': { tier: 'read' },
   'GET /api/planner/prefs': { tier: 'read' },
   'POST /api/planner/prefs': { tier: 'actuate', cmdOp: OP_PLANNER_PREFS_SET },
   'GET /api/energy/daily': { tier: 'read' },
@@ -522,6 +524,7 @@ export class SimApi {
     const route = matched.pattern
 
     if (route === 'GET /api/status') return this.#status()
+    if (route === 'GET /api/control/journal') return json(200, simulatedJournal(this.#opts.now(), req.query, 'lynx', 'easee'))
     if (route === 'GET /api/planner/prefs') {
       return json(200, this.#plannerPrefs?.() ?? {
         forecast_trust: 'balanced',
@@ -675,6 +678,10 @@ export class SimApi {
       ),
       energy: { today },
       drivers,
+      control_feedback: [
+        ...(this.#opts.house.batteryCapacityWh > 0 ? [controlFeedback('lynx', 'battery', r.batteryW, now)] : []),
+        controlFeedback('easee', 'ev', r.evW, now),
+      ],
     })
   }
 
@@ -736,6 +743,7 @@ export class SimApi {
           current_soc: pluggedIn ? door.soc : 0,
           ...(pluggedIn ? { soc_source: 'inferred' } : {}),
           current_power_w: powerW,
+          control_feedback: controlFeedback('easee', 'ev', powerW, now),
           delivered_wh_session: pluggedIn ? sessionWh : 0,
           target_soc: typeof this.#schedule?.soc === 'number' ? this.#schedule.soc : 0,
           updated_at_ms: now,
@@ -1187,6 +1195,15 @@ export class SimApi {
 
     this.#devices = this.#devices.filter((d) => d.id !== id)
     return json(200, { status: 'removed' })
+  }
+}
+
+/** One device doing as FTW asked, in the shape of Core's control_feedback. */
+function controlFeedback(driver: string, kind: string, watts: number, now: number) {
+  return {
+    driver, kind, mode: 'planner_arbitrage', status: 'following', reason: 'power_observed', severity: 'info', evidence: 'measured',
+    readings_fresh: true, requested_w: watts, sent_w: watts, readback_w: watts, actual_w: watts,
+    command_at_ms: now - 4_000, observed_at_ms: now - 1_000, site_confirmation: 'device_response_unconfirmed',
   }
 }
 
